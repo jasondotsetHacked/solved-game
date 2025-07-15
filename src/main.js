@@ -1,3 +1,5 @@
+const colony = require('managers_colony');
+
 module.exports.loop = function () {
-  console.log('Main loop running...');
+  colony.run();
 };
