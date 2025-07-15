@@ -1,4 +1,4 @@
-const roomManager = require('managers.room');
+const roomManager = require('managers_room');
 
 module.exports = {
   run() {

@@ -1,5 +1,5 @@
-const spawnManager = require('managers.spawn');
-const creepManager = require('managers.creep');
+const spawnManager = require('managers_spawn');
+const creepManager = require('managers_creep');
 
 module.exports = {
   run(room) {

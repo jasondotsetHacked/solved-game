@@ -1,9 +1,9 @@
 const tasks = {
-  harvest: require('tasks.harvest'),
-  build: require('tasks.build'),
-  haul: require('tasks.haul'),
-  upgrade: require('tasks.upgrade'),
-  repair: require('tasks.repair')
+  harvest: require('tasks_harvest'),
+  build: require('tasks_build'),
+  haul: require('tasks_haul'),
+  upgrade: require('tasks_upgrade'),
+  repair: require('tasks_repair')
 };
 
 module.exports = {
