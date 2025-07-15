@@ -1,5 +1,22 @@
+const config = require('./config');
+
 module.exports = {
-  run(creep) {
+  run(creep, taskManager) {
+    // --- Stall detection based on carried energy ---
+    const posKey = `${creep.pos.x},${creep.pos.y}`;
+    const progressKey = creep.store[RESOURCE_ENERGY];
+    if (!creep.memory.lastPos || creep.memory.lastPos !== posKey || creep.memory.lastProgress !== progressKey) {
+      creep.memory.lastPos = posKey;
+      creep.memory.lastProgress = progressKey;
+      creep.memory.stallTicks = 0;
+    } else {
+      creep.memory.stallTicks = (creep.memory.stallTicks || 0) + 1;
+    }
+    if (creep.memory.stallTicks > config.STALL_TICKS_THRESHOLD) {
+      if (taskManager) taskManager.assignTask(creep);
+      creep.memory.stallTicks = 0;
+      return;
+    }
     // If creep is full, decide next task based on room state
     if (creep.store.getFreeCapacity() === 0) {
       // Prefer hauling if storage/terminal exists
