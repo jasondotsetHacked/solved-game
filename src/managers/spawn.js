@@ -10,6 +10,16 @@ module.exports = {
     const spawn = Game.spawns['Spawn1'];
     if (!spawn || spawn.spawning) return;
 
+    // Cold boot: if no creeps exist, spawn a minimal harvester to restart economy
+    if (_.size(Game.creeps) === 0) {
+      const energyAvailable = spawn.room.energyAvailable;
+      const body = bodyManager.buildBody('worker', energyAvailable);
+      spawn.spawnCreep(body, `coldHarvester_${Game.time}`, {
+        memory: { role: 'worker', task: 'harvest' }
+      });
+      return;
+    }
+
     // use full room energy capacity for body building
     const energyCapacity = spawn.room.energyCapacityAvailable;
     // spawn stationary harvesters: one per source with container
