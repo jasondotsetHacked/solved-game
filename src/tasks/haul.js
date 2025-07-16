@@ -12,8 +12,8 @@ module.exports = {
           creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
         }
       } else {
-        // No structures need energy, switch to upgrading
-        creep.memory.task = 'upgrade';
+        // No structures need energy, switch to building
+        creep.memory.task = 'build';
       }
     } else {
       // No energy to haul, go harvest
