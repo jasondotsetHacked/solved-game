@@ -3,7 +3,8 @@ const tasks = {
   build: require('tasks_build'),
   haul: require('tasks_haul'),
   upgrade: require('tasks_upgrade'),
-  repair: require('tasks_repair')
+  repair: require('tasks_repair'),
+  scout: require('tasks_scout')
 };
 
 module.exports = {
