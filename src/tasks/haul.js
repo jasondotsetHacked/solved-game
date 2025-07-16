@@ -1,19 +1,23 @@
 module.exports = {
   run(creep) {
-    if (creep.store.getFreeCapacity() === 0) {
-      const target = creep.room.storage || creep.room.terminal;
+    // If creep has energy, transfer to spawn/extensions first
+    if (creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+      const target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: structure =>
+          (structure.structureType === STRUCTURE_SPAWN || structure.structureType === STRUCTURE_EXTENSION) &&
+          structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+      });
       if (target) {
         if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
           creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
         }
+      } else {
+        // No structures need energy, switch to upgrading
+        creep.memory.task = 'upgrade';
       }
     } else {
-      const source = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
-      if (source) {
-        if (creep.pickup(source) === ERR_NOT_IN_RANGE) {
-          creep.moveTo(source, {visualizePathStyle: {stroke: '#ffaa00'}});
-        }
-      }
+      // No energy to haul, go harvest
+      creep.memory.task = 'harvest';
     }
   }
 };

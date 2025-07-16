@@ -1,5 +1,14 @@
 module.exports = {
   run(creep) {
+    // Seed scouting queue with owned room(s) if empty
+    if (Memory.scouting.queue.length === 0) {
+      for (const spawnName in Game.spawns) {
+        const roomName = Game.spawns[spawnName].room.name;
+        if (!Memory.scouting.queue.includes(roomName)) {
+          Memory.scouting.queue.push(roomName);
+        }
+      }
+    }
 
     if (!creep.memory.targetRoom) {
       creep.memory.targetRoom = Memory.scouting.queue[0];

@@ -7,6 +7,9 @@ module.exports = {
           creep.moveTo(source, {visualizePathStyle: {stroke: '#ffaa00'}});
         }
       }
+    } else {
+      // switch to hauling energy when full
+      creep.memory.task = 'haul';
     }
   }
 };
