@@ -28,6 +28,23 @@ module.exports = {
         }
         return parts;
       }
+      case 'stationaryHarvester': {
+        // Reserve energy for one CARRY and one MOVE, use rest for WORK parts
+        const carryCost = 50;
+        const moveCost = 50;
+        const workCost = 100;
+        const reserved = carryCost + moveCost;
+        let remaining = energy - reserved;
+        const parts = [];
+        const numWork = remaining > 0 ? Math.floor(remaining / workCost) : 0;
+        for (let i = 0; i < numWork; i++) {
+          parts.push(WORK);
+        }
+        // Add carry and move parts
+        parts.push(CARRY);
+        parts.push(MOVE);
+        return parts;
+      }
       default:
         return [];
     }

@@ -12,6 +12,21 @@ module.exports = {
 
     // use full room energy capacity for body building
     const energyCapacity = spawn.room.energyCapacityAvailable;
+    // spawn stationary harvesters: one per source with container
+    const sources = spawn.room.find(FIND_SOURCES);
+    for (const source of sources) {
+      const container = source.pos.findInRange(FIND_STRUCTURES, 1, { filter: s => s.structureType === STRUCTURE_CONTAINER })[0];
+      if (!container) continue;
+      const assigned = _.filter(Game.creeps, c => c.memory.role === 'stationaryHarvester' && c.memory.sourceId === source.id);
+      if (assigned.length === 0) {
+        const body = bodyManager.buildBody('stationaryHarvester', energyCapacity);
+        spawn.spawnCreep(body, `stationaryHarvester_${source.id}_${Game.time}`, {
+          memory: { role: 'stationaryHarvester', task: 'stationaryHarvest', sourceId: source.id }
+        });
+        return;
+      }
+    }
+
     // iterate roles and spawn the first one below its desired count
     for (const def of ROLE_DEFINITIONS) {
       const creeps = _.filter(Game.creeps, c => c.memory.role === def.role);

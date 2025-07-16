@@ -1,5 +1,6 @@
 const tasks = {
   harvest: require('tasks_harvest'),
+  stationaryHarvest: require('tasks_stationaryHarvest'),
   build: require('tasks_build'),
   haul: require('tasks_haul'),
   upgrade: require('tasks_upgrade'),
