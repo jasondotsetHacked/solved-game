@@ -1,17 +1,8 @@
 module.exports = {
   run(creep) {
-    if (!Memory.scouting) {
-      Memory.scouting = {
-        queue: [creep.room.name],
-        visited: {},
-        tags: {}
-      };
-    }
-
-    const scouting = Memory.scouting;
 
     if (!creep.memory.targetRoom) {
-      creep.memory.targetRoom = scouting.queue[0];
+      creep.memory.targetRoom = Memory.scouting.queue[0];
     }
 
     if (!creep.memory.targetRoom) return;
@@ -23,10 +14,9 @@ module.exports = {
       return;
     }
 
-    // Arrived in target room
-    if (!scouting.visited[creep.room.name]) {
-      scouting.visited[creep.room.name] = true;
-
+    // Arrived in target room - record in rooms memory
+    const roomName = creep.room.name;
+    if (!Memory.rooms[roomName] || !Memory.rooms[roomName].visited) {
       let tag = 'empty';
       const room = creep.room;
       if (room.controller) {
@@ -40,20 +30,23 @@ module.exports = {
       } else if (room.find(FIND_HOSTILE_CREEPS).length) {
         tag = 'hostile';
       }
-      scouting.tags[room.name] = tag;
+      // Store room info
+      Memory.rooms[roomName] = { visited: true, tag };
 
-      const exits = Game.map.describeExits(room.name);
+      // Enqueue neighboring rooms
+      const exits = Game.map.describeExits(roomName);
       for (const dir in exits) {
         const r = exits[dir];
-        if (!scouting.visited[r] && !scouting.queue.includes(r)) {
-          scouting.queue.push(r);
+        const visited = Memory.rooms[r] && Memory.rooms[r].visited;
+        if (!visited && !Memory.scouting.queue.includes(r)) {
+          Memory.scouting.queue.push(r);
         }
       }
     }
 
-    if (scouting.queue[0] === creep.room.name) {
-      scouting.queue.shift();
+    if (Memory.scouting.queue[0] === creep.room.name) {
+      Memory.scouting.queue.shift();
     }
-    creep.memory.targetRoom = scouting.queue[0];
+    creep.memory.targetRoom = Memory.scouting.queue[0];
   }
 };
