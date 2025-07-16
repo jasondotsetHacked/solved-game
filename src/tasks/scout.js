@@ -47,6 +47,11 @@ module.exports = {
       for (const dir in exits) {
         const r = exits[dir];
         const visited = Memory.rooms[r] && Memory.rooms[r].visited;
+        // Only enqueue rooms that are actually accessible (normal)
+        const status = Game.map.getRoomStatus(r).status;
+        if (status == 'closed') {
+          continue;
+        }
         if (!visited && !Memory.scouting.queue.includes(r)) {
           Memory.scouting.queue.push(r);
         }
