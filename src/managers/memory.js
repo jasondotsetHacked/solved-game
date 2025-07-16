@@ -1,6 +1,5 @@
 module.exports = {
     initMemory() {
-        Memory = {};
         if (!Memory.creeps) {
             Memory.creeps = {};
         }
