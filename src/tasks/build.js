@@ -1,3 +1,5 @@
+const taskDistribution = require('managers_taskDistribution');
+
 module.exports = {
   run(creep) {
     // If out of energy, go harvest
@@ -8,11 +10,11 @@ module.exports = {
     const target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
     if (target) {
       if (creep.build(target) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
+        creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
       }
     } else {
-      // No construction sites, switch to upgrading
-      creep.memory.task = 'upgrade';
+      // No construction sites - pick another task based on workforce ratios
+      creep.memory.task = taskDistribution.chooseTask(creep.room);
     }
   }
 };
