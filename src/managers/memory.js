@@ -12,5 +12,12 @@ module.exports = {
         if (!Memory.scouting.queue) {
             Memory.scouting.queue = [];
         }
+    },
+    cleanCreepsMemory() {
+        for (const name in Memory.creeps) {
+            if (!Game.creeps[name]) {
+                delete Memory.creeps[name];
+            }
+        }
     }
 };

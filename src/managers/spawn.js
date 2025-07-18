@@ -1,8 +1,10 @@
 const bodyManager = require('managers_bodyManager');
 // Define roles with desired count and memory template
 const ROLE_DEFINITIONS = [
-  { role: 'scout', desiredCount: 1, memory: { role: 'scout', task: 'scout' } },
-  { role: 'worker', desiredCount: 7, memory: { role: 'worker', task: 'harvest' } }
+  { role: 'scout', desiredCount: 1, memory: { role: 'scout' } },
+  { role: 'worker', desiredCount: 5, memory: { role: 'worker' } },
+  { role: 'repair', desiredCount: 2, memory: { role: 'repair' } },
+  { role: 'hauler', desiredCount: 3, memory: { role: 'hauler' } }
 ];
 
 module.exports = {
@@ -15,7 +17,7 @@ module.exports = {
       const energyAvailable = spawn.room.energyAvailable;
       const body = bodyManager.buildBody('worker', energyAvailable);
       spawn.spawnCreep(body, `coldHarvester_${Game.time}`, {
-        memory: { role: 'worker', task: 'harvest' }
+        memory: { role: 'worker' }
       });
       return;
     }
@@ -31,7 +33,7 @@ module.exports = {
       if (assigned.length === 0) {
         const body = bodyManager.buildBody('stationaryHarvester', energyCapacity);
         spawn.spawnCreep(body, `stationaryHarvester_${source.id}_${Game.time}`, {
-          memory: { role: 'stationaryHarvester', task: 'stationaryHarvest', sourceId: source.id }
+          memory: { role: 'stationaryHarvester', sourceId: source.id }
         });
         return;
       }

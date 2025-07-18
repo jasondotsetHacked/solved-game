@@ -5,6 +5,7 @@ const mapVisuals = require('managers_mapVisuals');
 memoryManager.initMemory();
 
 module.exports.loop = function () {
+  memoryManager.cleanCreepsMemory();
   colony.run();
   mapVisuals.run();
 };
