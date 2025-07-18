@@ -3,11 +3,37 @@ const creepManager = require('managers_creep');
 
 module.exports = {
   run(room) {
+    // ensure room memory for sources
+    Memory.rooms = Memory.rooms || {};
+    Memory.rooms[room.name] = Memory.rooms[room.name] || {};
+    Memory.rooms[room.name].sources = Memory.rooms[room.name].sources || {};
+    // initialize source memory entries
+    const activeSources = room.find(FIND_SOURCES);
+    const terrain = room.getTerrain();
+    activeSources.forEach(s => {
+      if (!Memory.rooms[room.name].sources[s.id]) {
+        let spots = 0;
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            if (dx === 0 && dy === 0) continue;
+            const x = s.pos.x + dx, y = s.pos.y + dy;
+            if (terrain.get(x, y) !== TERRAIN_MASK_WALL) {
+              const structs = room.lookForAt(LOOK_STRUCTURES, x, y);
+              const sites = room.lookForAt(LOOK_CONSTRUCTION_SITES, x, y);
+              if (structs.length === 0 && sites.length === 0) {
+                spots++;
+              }
+            }
+          }
+        }
+        Memory.rooms[room.name].sources[s.id] = { spots, reservations: [] };
+      }
+    });
     const controller = room.controller;
     // determine if room is owned or reserved by me
     const mySpawn = Object.values(Game.spawns)[0];
     const myUsername = mySpawn ? mySpawn.owner.username : null;
-    if (controller && controller.level >= 2 && (controller.my || (controller.reservation && controller.reservation.username === myUsername))) {
+    if (controller && controller.level >= 3 && (controller.my || (controller.reservation && controller.reservation.username === myUsername))) {
       // ensure container construction sites exist at energy sources
       const terrain = room.getTerrain();
       for (const source of room.find(FIND_SOURCES)) {

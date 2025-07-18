@@ -6,27 +6,27 @@ module.exports = [
     template: [MOVE]
   },
   { role: 'worker',
-    desiredCount: 1,
+    desiredCount: 5,
     memory: { role: 'worker' },
     template: [MOVE, WORK, CARRY]
   },
   { role: 'stationaryHarvester',
-    desiredCount: 2,
+    desiredCount: 0,
     memory: { role: 'stationaryHarvester' },
     template: [MOVE, WORK, CARRY]
   },
   { role: 'filler',
-    desiredCount: 1,
+    desiredCount: 0,
     memory: { role: 'filler' },
     template: [MOVE, CARRY]
   },
   { role: 'repairer',
-    desiredCount: 1,
+    desiredCount: 0,
     memory: { role: 'repairer' },
     template: [MOVE, WORK, CARRY]
   },
   { role: 'hauler',
-    desiredCount: 1,
+    desiredCount: 0,
     memory: { role: 'hauler' },
     template: [MOVE, CARRY, CARRY]
   },
@@ -36,7 +36,7 @@ module.exports = [
     template: [MOVE, WORK, CARRY]
   },
   { role: 'builder',
-    desiredCount: 1,
+    desiredCount: 0,
     memory: { role: 'builder' },
     template: [MOVE, WORK, CARRY]
   }
