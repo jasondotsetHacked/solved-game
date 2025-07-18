@@ -1,12 +1,12 @@
 // centralized role definitions
 module.exports = [
   { role: 'scout',
-    desiredCount: 1,
+    desiredCount: 0,
     memory: { role: 'scout' },
     template: [MOVE]
   },
   { role: 'worker',
-    desiredCount: 7,
+    desiredCount: 2,
     memory: { role: 'worker' },
     template: [MOVE, WORK, CARRY]
   },
@@ -16,7 +16,7 @@ module.exports = [
     template: [MOVE, WORK, WORK, WORK, CARRY]
   },
   { role: 'filler',
-    desiredCount: 0,
+    desiredCount: 2,
     memory: { role: 'filler' },
     template: [MOVE, CARRY]
   },
@@ -31,7 +31,7 @@ module.exports = [
     template: [MOVE, CARRY, CARRY]
   },
   { role: 'upgrader',
-    desiredCount: 0,
+    desiredCount: 2,
     memory: { role: 'upgrader' },
     template: [MOVE, WORK, CARRY]
   },

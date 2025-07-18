@@ -1,6 +1,6 @@
 const gather = require('utils_gather');
 module.exports = {
-    run(creep) {
+  run(creep) {
     // manage working state based on energy levels
     if (creep.memory.working && creep.store[RESOURCE_ENERGY] === 0) {
       creep.memory.working = false;
@@ -57,8 +57,8 @@ module.exports = {
     // 5. Fill containers
     target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
       filter: s => s.structureType === STRUCTURE_CONTAINER &&
-                  s.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-                  !s.pos.findInRange(FIND_SOURCES, 1).length // Exclude containers near sources
+        s.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+        !s.pos.findInRange(FIND_SOURCES, 1).length // Exclude containers near sources
     });
     if (target) {
       if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
