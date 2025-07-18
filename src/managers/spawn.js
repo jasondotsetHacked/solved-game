@@ -1,5 +1,5 @@
 const bodyManager = require('managers_bodyManager');
-const { ROLE_DEFINITIONS } = require('managers_colony');
+const ROLE_DEFINITIONS = require('managers_roleDefinitions');
 
 
 module.exports = {

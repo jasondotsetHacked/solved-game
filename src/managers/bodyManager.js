@@ -1,5 +1,5 @@
-const { ROLE_DEFINITIONS } = require('managers_colony');
 // manager for constructing creep body arrays based on role and energy capacity
+const ROLE_DEFINITIONS = require('managers_roleDefinitions');
 
 module.exports = {
   buildBody(role, energy) {
