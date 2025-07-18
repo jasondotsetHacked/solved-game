@@ -1,11 +1,17 @@
 const gather = require('utils_gather');
 module.exports = {
     run(creep) {
-    // gather energy if needed; exit only if gathering action taken
-    if (creep.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
-      if (gather.gatherEnergy(creep)) {
-        return;
-      }
+    // manage working state based on energy levels
+    if (creep.memory.working && creep.store[RESOURCE_ENERGY] === 0) {
+      creep.memory.working = false;
+    }
+    if (!creep.memory.working && creep.store.getFreeCapacity() === 0) {
+      creep.memory.working = true;
+    }
+    // harvest energy when not working
+    if (!creep.memory.working) {
+      gather.gatherEnergy(creep);
+      return;
     }
 
     // Working: perform tasks by priority
@@ -50,7 +56,9 @@ module.exports = {
 
     // 5. Fill containers
     target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      filter: s => s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+      filter: s => s.structureType === STRUCTURE_CONTAINER &&
+                  s.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+                  !s.pos.findInRange(FIND_SOURCES, 1).length // Exclude containers near sources
     });
     if (target) {
       if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
