@@ -1,11 +1,6 @@
 const bodyManager = require('managers_bodyManager');
-// Define roles with desired count and memory template
-const ROLE_DEFINITIONS = [
-  { role: 'scout', desiredCount: 1, memory: { role: 'scout' } },
-  { role: 'worker', desiredCount: 5, memory: { role: 'worker' } },
-  { role: 'repair', desiredCount: 2, memory: { role: 'repair' } },
-  { role: 'hauler', desiredCount: 3, memory: { role: 'hauler' } }
-];
+const { ROLE_DEFINITIONS } = require('managers_colony');
+
 
 module.exports = {
   run() {
