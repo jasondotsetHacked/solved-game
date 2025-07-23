@@ -19,15 +19,14 @@ module.exports = {
                 delete Memory.creeps[name];
             }
         }
-        // clean up stale harvest reservations
         if (Memory.rooms) {
             for (const roomName in Memory.rooms) {
-                const roomMem = Memory.rooms[roomName];
-                if (roomMem.sources) {
-                    for (const sourceId in roomMem.sources) {
-                        const src = roomMem.sources[sourceId];
-                        if (src.reservations) {
-                            src.reservations = src.reservations.filter(creepName => Game.creeps[creepName]);
+                const roomMemory = Memory.rooms[roomName];
+                if (roomMemory.sources) {
+                    for (const sourceId in roomMemory.sources) {
+                        const sourceData = roomMemory.sources[sourceId];
+                        if (sourceData.reservations) {
+                            sourceData.reservations = sourceData.reservations.filter(creepName => Game.creeps[creepName]);
                         }
                     }
                 }

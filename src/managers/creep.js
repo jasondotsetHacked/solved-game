@@ -1,4 +1,3 @@
-// Role-based behavior handlers
 const roles = {
   scout: require('roles_scout'),
   worker: require('roles_worker'),
