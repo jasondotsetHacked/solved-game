@@ -11,9 +11,25 @@ module.exports = {
     }
     // harvest energy when not working
     if (!creep.memory.working) {
-      gather.gatherEnergy(creep);
+      // Prioritize ground resources (dropped energy)
+      const droppedEnergy = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+        filter: resource => resource.resourceType === RESOURCE_ENERGY
+      });
+      if (droppedEnergy) {
+        if (creep.pickup(droppedEnergy) === ERR_NOT_IN_RANGE) {
+          creep.moveTo(droppedEnergy);
+        }
+        return;
+      }
+
+      // If no dropped energy, gather from other sources
+      gather.gatherEnergy(creep, ['container', 'storage', 'harvest']);
       return;
     }
+
+    //special case for filler role, 
+    //if their gather target is a container that is NOT a stationary harvester container, or the storage, we change the garther target to the closest dropped energy or a stationary harvester container
+
 
     // Working: perform tasks by priority
     // 1. Fill spawn/extensions

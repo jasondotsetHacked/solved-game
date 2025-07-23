@@ -11,7 +11,7 @@ module.exports = {
     }
     // harvest energy when not working
     if (!creep.memory.working) {
-      gather.gatherEnergy(creep, ['storage', 'dropped', 'container', 'harvest']);
+      gather.gatherEnergy(creep, ['container', 'storage', 'dropped', 'harvest']);
       return;
     }
 
