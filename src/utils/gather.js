@@ -1,15 +1,15 @@
-module.exports.gatherEnergy = function (creep, priority = ['dropped', 'container', 'storage', 'harvest']) {
+module.exports.gatherEnergy = function (creep, energyPriority = ['dropped', 'container', 'storage', 'harvest']) {
 
-  // Helper function to release reservations
-  const releaseReservation = () => {
+  const clearHarvestReservation = () => {
     if (creep.memory.sourceType === 'harvest' && creep.memory.sourceId) {
-      const roomMem = Memory.rooms && Memory.rooms[creep.room.name];
-      const src = roomMem && roomMem.sources && roomMem.sources[creep.memory.sourceId];
-      if (src) src.reservations = src.reservations.filter(n => n !== creep.name);
+      const roomMemory = Memory.rooms && Memory.rooms[creep.room.name];
+      const sourceMemory = roomMemory && roomMemory.sources && roomMemory.sources[creep.memory.sourceId];
+      if (sourceMemory) {
+        sourceMemory.reservations = sourceMemory.reservations.filter(reservedBy => reservedBy !== creep.name);
+      }
     }
   };
 
-  // Toggle out of working if empty
   if (creep.memory.working && creep.store[RESOURCE_ENERGY] === 0) {
     creep.memory.working = false;
     creep.memory.sourceId = null;
@@ -17,65 +17,62 @@ module.exports.gatherEnergy = function (creep, priority = ['dropped', 'container
     return true;
   }
 
-  // Toggle into working if full
   if (!creep.memory.working && creep.store.getFreeCapacity() === 0) {
-    releaseReservation();
+    clearHarvestReservation();
     creep.memory.working = true;
     creep.memory.sourceId = null;
     creep.memory.sourceType = null;
     return false;
   }
 
-  // Skip if already in working mode
   if (creep.memory.working) return false;
 
-  // Get or pick a source
-  const pickSource = () => {
-    let source = Game.getObjectById(creep.memory.sourceId);
-    if (source) return source;
+  const selectEnergySource = () => {
+    let energySource = Game.getObjectById(creep.memory.sourceId);
+    if (energySource) return energySource;
 
-    for (const type of priority) {
-      switch (type) {
+    for (const sourceType of energyPriority) {
+      switch (sourceType) {
         case 'dropped':
-          source = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
-          if (source) {
+          energySource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
+          if (energySource) {
             creep.memory.sourceType = 'dropped';
-            return source;
+            return energySource;
           }
           break;
         case 'container':
-          source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-            filter: s => s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0
+          energySource = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+            filter: structure => structure.structureType === STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 0
           });
-          if (source) {
+          if (energySource) {
             creep.memory.sourceType = 'container';
-            return source;
+            return energySource;
           }
           break;
         case 'storage':
-          source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-            filter: s => s.structureType === STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > 0
+          energySource = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+            filter: structure => structure.structureType === STRUCTURE_STORAGE && structure.store[RESOURCE_ENERGY] > 0
           });
-          if (source) {
+          if (energySource) {
             creep.memory.sourceType = 'storage';
-            return source;
+            return energySource;
           }
           break;
         case 'harvest':
-          const roomMem = Memory.rooms && Memory.rooms[creep.room.name];
-          const sourcesMem = (roomMem && roomMem.sources) || {};
-          const availIds = Object.entries(sourcesMem)
+          const roomMemory = Memory.rooms && Memory.rooms[creep.room.name];
+          const sourcesMemory = (roomMemory && roomMemory.sources) || {};
+          const availableSourceIds = Object.entries(sourcesMemory)
             .filter(([id, data]) => data.reservations.length < data.spots)
             .map(([id]) => id);
 
-          if (availIds.length) {
-            const availSources = availIds.map(id => Game.getObjectById(id)).filter(s => s);
-            source = creep.pos.findClosestByPath(availSources);
-            if (source) {
+          if (availableSourceIds.length) {
+            const availableSources = availableSourceIds.map(id => Game.getObjectById(id)).filter(source => source);
+            energySource = creep.pos.findClosestByPath(availableSources);
+            if (energySource) {
               creep.memory.sourceType = 'harvest';
-              const resList = sourcesMem[source.id].reservations;
-              if (!resList.includes(creep.name)) resList.push(creep.name);
-              return source;
+              const reservationList = sourcesMemory[energySource.id].reservations;
+              if (!reservationList.includes(creep.name)) reservationList.push(creep.name);
+              return energySource;
             }
           }
           break;
@@ -85,19 +82,18 @@ module.exports.gatherEnergy = function (creep, priority = ['dropped', 'container
     return null;
   };
 
-  const source = pickSource();
-  if (!source) {
+  const energySource = selectEnergySource();
+  if (!energySource) {
     creep.memory.sourceId = null;
     creep.memory.sourceType = null;
     return true;
   }
 
-  creep.memory.sourceId = source.id;
+  creep.memory.sourceId = energySource.id;
 
-  // Validate source
-  const validateSource = () => {
-    if (!source || ((creep.memory.sourceType === 'container' || creep.memory.sourceType === 'storage') && source.store[RESOURCE_ENERGY] === 0)) {
-      releaseReservation();
+  const isSourceValid = () => {
+    if (!energySource || ((creep.memory.sourceType === 'container' || creep.memory.sourceType === 'storage') && energySource.store[RESOURCE_ENERGY] === 0)) {
+      clearHarvestReservation();
       creep.memory.sourceId = null;
       creep.memory.sourceType = null;
       return false;
@@ -105,31 +101,30 @@ module.exports.gatherEnergy = function (creep, priority = ['dropped', 'container
     return true;
   };
 
-  if (!validateSource()) return true;
+  if (!isSourceValid()) return true;
 
-  // Perform action
-  const performAction = () => {
-    let result;
+  const gatherEnergyFromSource = () => {
+    let actionResult;
     switch (creep.memory.sourceType) {
       case 'dropped':
-        result = creep.pickup(source);
+        actionResult = creep.pickup(energySource);
         break;
       case 'container':
       case 'storage':
-        result = creep.withdraw(source, RESOURCE_ENERGY);
+        actionResult = creep.withdraw(energySource, RESOURCE_ENERGY);
         break;
       case 'harvest':
-        result = creep.harvest(source);
+        actionResult = creep.harvest(energySource);
         break;
     }
 
-    if (result === ERR_NOT_IN_RANGE) {
-      creep.moveTo(source);
+    if (actionResult === ERR_NOT_IN_RANGE) {
+      creep.moveTo(energySource);
       return true;
     }
 
-    if (result === OK && creep.store.getFreeCapacity() === 0) {
-      releaseReservation();
+    if (actionResult === OK && creep.store.getFreeCapacity() === 0) {
+      clearHarvestReservation();
       creep.memory.working = true;
       creep.memory.sourceId = null;
       creep.memory.sourceType = null;
@@ -138,5 +133,5 @@ module.exports.gatherEnergy = function (creep, priority = ['dropped', 'container
     return true;
   };
 
-  return performAction();
+  return gatherEnergyFromSource();
 };

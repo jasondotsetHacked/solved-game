@@ -1,0 +1,1 @@
+The code you produce should be "Self documenting" and "Self explaining", no need for comments unless the code is very complex.
