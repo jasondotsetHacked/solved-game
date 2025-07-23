@@ -2,13 +2,11 @@ module.exports = {
   run(creep) {
     const sourceId = creep.memory.sourceId;
     if (!sourceId) {
-      console.log(`${creep.name} has no sourceId in memory.`);
       return;
     }
 
     const source = Game.getObjectById(sourceId);
     if (!source) {
-      console.log(`${creep.name} cannot find source with ID ${sourceId}.`);
       return;
     }
 
@@ -17,7 +15,6 @@ module.exports = {
     })[0];
 
     if (!container) {
-      console.log(`${creep.name} cannot find a container near source ${sourceId}.`);
       return;
     }
 
