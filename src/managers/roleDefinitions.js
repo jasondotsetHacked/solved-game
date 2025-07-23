@@ -1,4 +1,3 @@
-// centralized role definitions
 module.exports = [
   {
     role: 'scout',
