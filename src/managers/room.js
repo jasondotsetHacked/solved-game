@@ -1,6 +1,6 @@
 const spawnManager = require('managers_spawn');
 const creepManager = require('managers_creep');
-const turret = require('structures_turret');
+const structureManager = require('managers_structure');
 
 module.exports = {
   run(room) {
@@ -66,12 +66,7 @@ module.exports = {
       const creep = Game.creeps[name];
       creepManager.run(creep);
     }
-    // run turret logic
-    if (room.controller && room.controller.my) {
-      const turrets = room.find(FIND_MY_STRUCTURES, { filter: s => s.structureType === STRUCTURE_TOWER });
-      for (const turretObj of turrets) {
-        turret.run(turretObj);
-      }
-    }
+    // manage structures in the room
+    structureManager.run(room);
   }
 };
