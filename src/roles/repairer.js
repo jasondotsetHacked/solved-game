@@ -1,5 +1,4 @@
 const gather = require('utils_gather');
-const wallRampStep = 1000; // repair walls/ramparts in this increment
 
 module.exports = {
   run(creep) {
@@ -45,11 +44,13 @@ module.exports = {
       return;
     }
 
-    // 3. Repair walls and ramparts incrementally
-    target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+    // 3. Repair walls and ramparts by lowest hits
+    const walls = creep.room.find(FIND_STRUCTURES, {
       filter: s => (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART) && s.hits < s.hitsMax
     });
-    if (target) {
+    if (walls.length) {
+      // pick the structure with the lowest hit points
+      target = walls.reduce((min, s) => (s.hits < min.hits ? s : min), walls[0]);
       creep.memory.targetId = target.id;
       if (creep.repair(target) === ERR_NOT_IN_RANGE) {
         creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
