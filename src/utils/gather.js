@@ -93,7 +93,7 @@ module.exports.gatherEnergy = function (creep, energyPriority = ['dropped', 'con
 
   const isSourceValid = () => {
     if (!energySource || ((creep.memory.sourceType === 'container' || creep.memory.sourceType === 'storage') && energySource.store[RESOURCE_ENERGY] === 0)) {
-      console.log(`Creep ${creep.name} found invalid source (${creep.memory.sourceType}), clearing target.`);
+      // console.log(`Creep ${creep.name} found invalid source (${creep.memory.sourceType}), clearing target.`);
       clearHarvestReservation();
       creep.memory.sourceId = null;
       creep.memory.sourceType = null;
@@ -135,7 +135,7 @@ module.exports.gatherEnergy = function (creep, energyPriority = ['dropped', 'con
     }
 
     // handle unexpected errors (e.g., no energy, invalid target)
-    console.log(`Creep ${creep.name} gather error (${actionResult}) on ${creep.memory.sourceType}, resetting.`);
+    // console.log(`Creep ${creep.name} gather error (${actionResult}) on ${creep.memory.sourceType}, resetting.`);
     clearHarvestReservation();
     creep.memory.sourceId = null;
     creep.memory.sourceType = null;
