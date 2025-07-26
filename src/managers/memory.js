@@ -14,6 +14,7 @@ module.exports = {
         }
         if (!Memory.bunkerStamp) {
             Memory.bunkerStamp = {
+                "anchor": {"x": 0, "y": 0},
                 "buildings":{
                     "link":[{"x":0,"y":-1}],
                     "spawn":[{"x":-1,"y":1},{"x":1,"y":4},{"x":4,"y":1}],
@@ -33,6 +34,7 @@ module.exports = {
         }
         if (!Memory.bunkerCore) {
             Memory.bunkerCore = {
+                "anchor": {"x": 0, "y": 0},
                 "buildings":{
                     "spawn":[{"x":0,"y":-1}],
                     "rampart":[{"x":-1,"y":-1},{"x":0,"y":-1},{"x":1,"y":-1},{"x":1,"y":0},{"x":1,"y":1},{"x":0,"y":1},{"x":-1,"y":1},{"x":-1,"y":0},{"x":-1,"y":2},{"x":0,"y":2},{"x":1,"y":2},{"x":1,"y":3},{"x":0,"y":3},{"x":-1,"y":3},{"x":-2,"y":3},{"x":-2,"y":2},{"x":0,"y":0}],"storage":[{"x":-1,"y":0}],
