@@ -1,6 +1,12 @@
+const WALL = 1;
+const SWAMP = 2;
+const terrainCache = {};
+
 function computeStampBounds(buildings) {
-    let minDx = Infinity, maxDx = -Infinity;
-    let minDy = Infinity, maxDy = -Infinity;
+    let minDx = Infinity;
+    let maxDx = -Infinity;
+    let minDy = Infinity;
+    let maxDy = -Infinity;
     for (const type in buildings) {
         for (const pos of buildings[type]) {
             if (pos.x < minDx) minDx = pos.x;
@@ -12,71 +18,91 @@ function computeStampBounds(buildings) {
     return { minDx, maxDx, minDy, maxDy };
 }
 
-function stampFits(room, anchorX, anchorY, buildings) {
-    const terrain = room.getTerrain();
+async function getTerrain(roomName, inGame) {
+    if (inGame && global.Game && Game.rooms[roomName]) return Game.rooms[roomName].getTerrain();
+    if (terrainCache[roomName]) return terrainCache[roomName];
+    const url = `https://screeps.com/api/game/room-terrain?room=${roomName}&encoded=1&shard=shard3`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const str = data.terrain[0].terrain;
+    const grid = [];
+    for (let y = 0; y < 50; y++) {
+        grid[y] = [];
+        for (let x = 0; x < 50; x++) {
+            const c = str.charCodeAt(y * 50 + x) - 48;
+            grid[y][x] = c === 2 ? WALL : c === 1 ? SWAMP : 0;
+        }
+    }
+    const terrain = { get: (x, y) => grid[y][x] };
+    terrainCache[roomName] = terrain;
+    return terrain;
+}
+
+async function stampFits(roomName, anchorX, anchorY, buildings, inGame = true) {
+    const terrain = await getTerrain(roomName, inGame);
+    const room = inGame && global.Game ? Game.rooms[roomName] : null;
     for (const type in buildings) {
         for (const pos of buildings[type]) {
             const x = anchorX + pos.x;
             const y = anchorY + pos.y;
             if (x < 0 || x >= 50 || y < 0 || y >= 50) return false;
-            if (terrain.get(x, y) === TERRAIN_MASK_WALL) return false;
-            if (room.lookForAt(LOOK_STRUCTURES, x, y).length > 0) return false;
-            if (room.lookForAt(LOOK_CONSTRUCTION_SITES, x, y).length > 0) return false;
-            if (room.lookForAt(LOOK_SOURCES, x, y).length > 0) return false;
-            if (room.lookForAt(LOOK_MINERALS, x, y).length > 0) return false;
-            if (room.lookForAt(LOOK_CONTROLLER, x, y).length > 0) return false;
+            if (terrain.get(x, y) === WALL) return false;
+            if (room) {
+                if (room.lookForAt(LOOK_STRUCTURES, x, y).length) return false;
+                if (room.lookForAt(LOOK_CONSTRUCTION_SITES, x, y).length) return false;
+                if (room.lookForAt(LOOK_SOURCES, x, y).length) return false;
+                if (room.lookForAt(LOOK_MINERALS, x, y).length) return false;
+                if (room.lookForAt(LOOK_CONTROLLER, x, y).length) return false;
+            }
         }
     }
     return true;
 }
 
-function findStampAnchors(room, buildings, maxResults) {
+async function findStampAnchors(roomName, buildings, maxResults, inGame = true) {
     const { minDx, maxDx, minDy, maxDy } = computeStampBounds(buildings);
     const candidates = [];
-    const controller = room.controller;
-    const sources = room.find(FIND_SOURCES);
-    const startX = 0 - minDx, endX = 49 - maxDx;
-    const startY = 0 - minDy, endY = 49 - maxDy;
+    const room = inGame && global.Game ? Game.rooms[roomName] : null;
+    const controller = room ? room.controller : null;
+    const sources = room ? room.find(FIND_SOURCES) : [];
+    const startX = 0 - minDx;
+    const endX = 49 - maxDx;
+    const startY = 0 - minDy;
+    const endY = 49 - maxDy;
     for (let y = startY; y <= endY; y++) {
         for (let x = startX; x <= endX; x++) {
-            if (!stampFits(room, x, y, buildings)) continue;
+            if (!await stampFits(roomName, x, y, buildings, inGame)) continue;
             let score = 0;
-            if (controller) {
-                score += Math.hypot(x - controller.pos.x, y - controller.pos.y);
-            }
-            for (const source of sources) {
-                score += Math.hypot(x - source.pos.x, y - source.pos.y);
-            }
+            if (controller) score += Math.hypot(x - controller.pos.x, y - controller.pos.y);
+            for (const source of sources) score += Math.hypot(x - source.pos.x, y - source.pos.y);
             candidates.push({ x, y, score });
         }
     }
     candidates.sort((a, b) => a.score - b.score);
-    if (typeof maxResults === 'number' && candidates.length > maxResults) {
-        return candidates.slice(0, maxResults);
-    }
+    if (typeof maxResults === 'number' && candidates.length > maxResults) return candidates.slice(0, maxResults);
     return candidates;
 }
 
-function placeStamp(room, anchorX, anchorY, buildings) {
+function placeStamp(roomName, anchorX, anchorY, buildings) {
+    if (!global.Game || !Game.rooms[roomName]) return;
+    const room = Game.rooms[roomName];
     for (const type in buildings) {
         for (const pos of buildings[type]) {
             const x = anchorX + pos.x;
             const y = anchorY + pos.y;
             const res = room.createConstructionSite(x, y, type);
-            if (res !== OK) {
-                console.log(`Failed to create ${type} at ${x},${y}: ${res}`);
-            }
+            if (res !== OK) console.log(`Failed to create ${type} at ${x},${y}: ${res}`);
         }
     }
 }
 
-function computeDistanceTransform(room) {
-    const terrain = room.getTerrain();
+async function computeDistanceTransform(roomName, inGame = true) {
+    const terrain = await getTerrain(roomName, inGame);
     const dist = [];
     for (let y = 0; y < 50; y++) {
         dist[y] = [];
         for (let x = 0; x < 50; x++) {
-            dist[y][x] = (terrain.get(x, y) === TERRAIN_MASK_WALL) ? 0 : Infinity;
+            dist[y][x] = terrain.get(x, y) === WALL ? 0 : Infinity;
         }
     }
     for (let y = 0; y < 50; y++) {
@@ -102,7 +128,9 @@ function computeDistanceTransform(room) {
     return dist;
 }
 
-function planResourceRoads(room, anchorX, anchorY) {
+function planResourceRoads(roomName, anchorX, anchorY) {
+    if (!global.Game || !Game.rooms[roomName]) return;
+    const room = Game.rooms[roomName];
     const start = new RoomPosition(anchorX, anchorY, room.name);
     const targets = room.find(FIND_SOURCES).map(src => ({ pos: src.pos, range: 1 }));
     const mineral = room.find(FIND_MINERALS)[0];
@@ -131,14 +159,13 @@ function planResourceRoads(room, anchorX, anchorY) {
                 return costs;
             }
         });
-        for (const step of result.path) {
-            room.createConstructionSite(step.x, step.y, STRUCTURE_ROAD);
-        }
+        for (const step of result.path) room.createConstructionSite(step.x, step.y, STRUCTURE_ROAD);
     }
 }
 
-function findExtensionSpots(room, anchorX, anchorY, count, reservedKeys) {
-    const terrain = room.getTerrain();
+async function findExtensionSpots(roomName, anchorX, anchorY, count, reservedKeys, inGame = true) {
+    const terrain = await getTerrain(roomName, inGame);
+    const room = inGame && global.Game ? Game.rooms[roomName] : null;
     const visited = new Set();
     const queue = [];
     const spots = [];
@@ -154,13 +181,15 @@ function findExtensionSpots(room, anchorX, anchorY, count, reservedKeys) {
             if (nx < 0 || nx >= 50 || ny < 0 || ny >= 50) continue;
             if (visited.has(k)) continue;
             visited.add(k);
-            if (terrain.get(nx, ny) === TERRAIN_MASK_WALL) continue;
+            if (terrain.get(nx, ny) === WALL) continue;
             if (reservedKeys && reservedKeys.has(k)) continue;
-            if (room.lookForAt(LOOK_STRUCTURES, nx, ny).length > 0) continue;
-            if (room.lookForAt(LOOK_SOURCES, nx, ny).length > 0) continue;
-            if (room.lookForAt(LOOK_MINERALS, nx, ny).length > 0) continue;
-            if (room.lookForAt(LOOK_CONTROLLER, nx, ny).length > 0) continue;
-            if (room.lookForAt(LOOK_CONSTRUCTION_SITES, nx, ny).length > 0) continue;
+            if (room) {
+                if (room.lookForAt(LOOK_STRUCTURES, nx, ny).length) continue;
+                if (room.lookForAt(LOOK_SOURCES, nx, ny).length) continue;
+                if (room.lookForAt(LOOK_MINERALS, nx, ny).length) continue;
+                if (room.lookForAt(LOOK_CONTROLLER, nx, ny).length) continue;
+                if (room.lookForAt(LOOK_CONSTRUCTION_SITES, nx, ny).length) continue;
+            }
             spots.push({ x: nx, y: ny });
             queue.push({ x: nx, y: ny });
             if (spots.length >= count) break;
@@ -169,15 +198,11 @@ function findExtensionSpots(room, anchorX, anchorY, count, reservedKeys) {
     return spots;
 }
 
-function findBestBunkerPlacement(room, fullBuildings, coreBuildings) {
-    const fullAnchors = findStampAnchors(room, fullBuildings, 1);
-    if (fullAnchors.length > 0) {
-        return { buildings: fullBuildings, anchor: fullAnchors[0], type: 'full' };
-    }
-    const coreAnchors = findStampAnchors(room, coreBuildings, 1);
-    if (coreAnchors.length > 0) {
-        return { buildings: coreBuildings, anchor: coreAnchors[0], type: 'core' };
-    }
+async function findBestBunkerPlacement(roomName, fullBuildings, coreBuildings, inGame = true) {
+    const fullAnchors = await findStampAnchors(roomName, fullBuildings, 1, inGame);
+    if (fullAnchors.length) return { buildings: fullBuildings, anchor: fullAnchors[0], type: 'full' };
+    const coreAnchors = await findStampAnchors(roomName, coreBuildings, 1, inGame);
+    if (coreAnchors.length) return { buildings: coreBuildings, anchor: coreAnchors[0], type: 'core' };
     return null;
 }
 
