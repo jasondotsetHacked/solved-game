@@ -7,7 +7,7 @@ module.exports = [
   },
   {
     role: 'worker',
-    desiredCount: 1,
+    desiredCount: 3,
     memory: { role: 'worker' },
     template: [MOVE, WORK, CARRY]
   },
@@ -19,13 +19,13 @@ module.exports = [
   },
   {
     role: 'filler',
-    desiredCount: 1,
+    desiredCount: 0,
     memory: { role: 'filler' },
     template: [MOVE, CARRY]
   },
   {
     role: 'repairer',
-    desiredCount: 1,
+    desiredCount: 0,
     memory: { role: 'repairer' },
     template: [MOVE, WORK, CARRY]
   },
