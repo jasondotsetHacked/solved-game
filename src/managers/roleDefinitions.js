@@ -7,7 +7,7 @@ module.exports = [
   },
   {
     role: 'worker',
-    desiredCount: 3,
+    desiredCount: 6,
     memory: { role: 'worker' },
     template: [MOVE, WORK, CARRY]
   },
