@@ -25,8 +25,9 @@ module.exports = {
     ]
   },
   stationaryHarvester: {
-    minimumEnergy: 550,
+    minimumEnergy: 300,
     tiers: [
+      tier(repeat(WORK, 2), CARRY, MOVE),
       tier(repeat(WORK, 5), CARRY, MOVE),
       tier(repeat(WORK, 6), CARRY, repeat(MOVE, 2)),
       tier(repeat(WORK, 7), CARRY, repeat(MOVE, 2)),

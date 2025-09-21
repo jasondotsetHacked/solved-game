@@ -12,11 +12,9 @@ module.exports = {
     if (!creep.memory.working && creep.store.getFreeCapacity() === 0) {
       creep.memory.working = true;
     }
-    if (!creep.memory.working) {
-      const priorities = creep.memory.bootstrap
-        ? ['harvest', 'dropped', 'container', 'storage']
-        : ['storage', 'container', 'dropped', 'harvest'];
-      gather.gatherEnergy(creep, priorities);
+    if (creep.memory.working && creep.memory.bootstrap) {
+      creep.drop(RESOURCE_ENERGY);
+      creep.memory.working = false;
       return;
     }
     let targetStructure = creep.pos.findClosestByPath(FIND_STRUCTURES, {

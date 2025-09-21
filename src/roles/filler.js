@@ -60,7 +60,7 @@ module.exports = {
       return;
     }
     targetStructure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      filter: s => s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+      filter: s => s.store && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
     });
     if (targetStructure) {
       if (creep.transfer(targetStructure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {

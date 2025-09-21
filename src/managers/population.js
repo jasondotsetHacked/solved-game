@@ -2,11 +2,11 @@ const ROLE_CATALOG = require('managers_roleDefinitions');
 
 const PRIORITY = {
   bootstrap: 0,
+  upgrader: 4,
   harvester: 5,
   worker: 10,
   filler: 20,
   hauler: 25,
-  upgrader: 30,
   repairer: 40,
   builder: 50,
   scout: 60
@@ -49,67 +49,90 @@ function buildRoomQueue(roomState, empire) {
     return queue;
   }
 
-  if (needsBootstrap(roomState)) {
-    const targetBoot = Math.max(2, Math.min(4, roomState.sources ? roomState.sources.length + 1 : 2));
-    const existingBoots = (counts.worker || 0) + (counts.hauler || 0) + (counts.filler || 0);
-    const missing = Math.max(0, targetBoot - existingBoots);
-    for (let i = 0; i < missing; i++) {
-      queue.push(createRoleRequest(roomState, 'worker', PRIORITY.bootstrap, {
-        memory: { bootstrap: true },
-        energyBudget: Math.min(energyCapacity, energyBudgetFor('worker', roomState)),
-        minEnergy: energyMinimumFor('worker'),
-        allowRemote: false
-      }));
-    }
+  if (totalAssigned === 0) {
+    const bootstrapBudget = Math.min(energyCapacity, energyBudgetFor('worker', roomState));
+    queue.push(createRoleRequest(roomState, 'worker', PRIORITY.bootstrap, {
+      memory: { bootstrap: true },
+      energyBudget: bootstrapBudget,
+      minEnergy: energyMinimumFor('worker'),
+      allowRemote: false
+    }));
+    return queue;
   }
 
   const sources = roomState.sources || [];
-  for (const source of sources) {
-    if (source.spots === 0) continue;
-    if ((source.assignedHarvesters || 0) >= 1) continue;
-    queue.push(createRoleRequest(roomState, 'stationaryHarvester', PRIORITY.harvester, {
-      memory: { sourceId: source.id },
-      minEnergy: energyMinimumFor('stationaryHarvester'),
-      energyBudget: energyBudgetFor('stationaryHarvester', roomState),
-      namePrefix: stationaryHarvester_
-    }));
-  }
 
-  ensureRole(queue, roomState, 'worker', PRIORITY.worker, calculateWorkerTarget(roomState), {
-    energyBudget: energyBudgetFor('worker', roomState)
-  });
-
-  if (sources.length > 0) {
-    const haulerTarget = calculateHaulerTarget(roomState, sources);
-    ensureRole(queue, roomState, 'hauler', PRIORITY.hauler, haulerTarget, {
+  // Sequential spawning for early game
+  if (totalAssigned === 1) {
+    // Spawn first stationary harvester
+    if (sources.length > 0) {
+      queue.push(createRoleRequest(roomState, 'stationaryHarvester', PRIORITY.harvester, {
+        memory: { sourceId: sources[0].id },
+        minEnergy: energyMinimumFor('stationaryHarvester'),
+        energyBudget: energyBudgetFor('stationaryHarvester', roomState),
+        namePrefix: 'stationaryHarvester_'
+      }));
+    }
+  } else if (totalAssigned === 2 || totalAssigned === 3) {
+    // Spawn haulers (1 per step)
+    queue.push(createRoleRequest(roomState, 'hauler', PRIORITY.hauler, {
       energyBudget: energyBudgetFor('hauler', roomState)
-    });
-  }
+    }));
+  } else if (totalAssigned === 4) {
+    // Spawn upgrader
+    queue.push(createRoleRequest(roomState, 'upgrader', PRIORITY.upgrader, {
+      energyBudget: energyBudgetFor('upgrader', roomState)
+    }));
+  } else if (totalAssigned === 5) {
+    // Spawn second stationary harvester
+    if (sources.length > 1) {
+      queue.push(createRoleRequest(roomState, 'stationaryHarvester', PRIORITY.harvester, {
+        memory: { sourceId: sources[1].id },
+        minEnergy: energyMinimumFor('stationaryHarvester'),
+        energyBudget: energyBudgetFor('stationaryHarvester', roomState),
+        namePrefix: 'stationaryHarvester_'
+      }));
+    }
+  } else {
+    // Normal dynamic spawning
+    // Note: Stationary harvesters are handled in sequential spawning above
 
-  if (roomState.supplyTargets > 0 || roomState.hasStorage) {
-    const fillerTarget = calculateFillerTarget(roomState);
-    ensureRole(queue, roomState, 'filler', PRIORITY.filler, fillerTarget, {
-      energyBudget: energyBudgetFor('filler', roomState)
+    ensureRole(queue, roomState, 'worker', PRIORITY.worker, calculateWorkerTarget(roomState), {
+      energyBudget: energyBudgetFor('worker', roomState)
     });
-  }
 
-  const upgraderTarget = calculateUpgraderTarget(roomState, empire);
-  ensureRole(queue, roomState, 'upgrader', PRIORITY.upgrader, upgraderTarget, {
-    energyBudget: energyBudgetFor('upgrader', roomState)
-  });
+    if (sources.length > 0) {
+      const haulerTarget = calculateHaulerTarget(roomState, sources);
+      ensureRole(queue, roomState, 'hauler', PRIORITY.hauler, haulerTarget, {
+        energyBudget: energyBudgetFor('hauler', roomState)
+      });
+    }
 
-  const repairerTarget = calculateRepairerTarget(roomState);
-  if (repairerTarget > 0) {
-    ensureRole(queue, roomState, 'repairer', PRIORITY.repairer, repairerTarget, {
-      energyBudget: energyBudgetFor('repairer', roomState)
+    if (roomState.supplyTargets > 0 || roomState.hasStorage) {
+      const fillerTarget = calculateFillerTarget(roomState);
+      ensureRole(queue, roomState, 'filler', PRIORITY.filler, fillerTarget, {
+        energyBudget: energyBudgetFor('filler', roomState)
+      });
+    }
+
+    const upgraderTarget = calculateUpgraderTarget(roomState, empire);
+    ensureRole(queue, roomState, 'upgrader', PRIORITY.upgrader, upgraderTarget, {
+      energyBudget: energyBudgetFor('upgrader', roomState)
     });
-  }
 
-  const builderTarget = calculateBuilderTarget(roomState);
-  if (builderTarget > 0) {
-    ensureRole(queue, roomState, 'builder', PRIORITY.builder, builderTarget, {
-      energyBudget: energyBudgetFor('builder', roomState)
-    });
+    const repairerTarget = calculateRepairerTarget(roomState);
+    if (repairerTarget > 0) {
+      ensureRole(queue, roomState, 'repairer', PRIORITY.repairer, repairerTarget, {
+        energyBudget: energyBudgetFor('repairer', roomState)
+      });
+    }
+
+    const builderTarget = calculateBuilderTarget(roomState);
+    if (builderTarget > 0) {
+      ensureRole(queue, roomState, 'builder', PRIORITY.builder, builderTarget, {
+        energyBudget: energyBudgetFor('builder', roomState)
+      });
+    }
   }
 
   return queue;
@@ -238,6 +261,8 @@ function calculateBuilderTarget(roomState) {
 }
 
 function calculateScoutTarget(empire, scoutQueueSize) {
+  const totalCreeps = Object.values(empire.creeps || {}).reduce((sum, roleCounts) => sum + Object.values(roleCounts).reduce((s, c) => s + c, 0), 0);
+  if (scoutQueueSize === 0 && totalCreeps < 5) return 0;
   if (empire.ownedRooms.length === 0) return 0;
   if (scoutQueueSize === 0) return 1;
   if (scoutQueueSize > 30) return 3;

@@ -28,5 +28,10 @@
     }
 
     creep.harvest(source);
+
+    // Drop energy if carry is full to allow continuous harvesting
+    if (creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+      creep.drop(RESOURCE_ENERGY);
+    }
   }
 };

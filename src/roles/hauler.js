@@ -22,6 +22,42 @@ module.exports = {
       return;
     }
 
+    const needyCreep = findNeedyCreep(creep);
+    if (needyCreep) {
+      if (creep.transfer(needyCreep, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(needyCreep, { visualizePathStyle: { stroke: '#ffaa00' } });
+      }
+      return;
+    }
+
+    // Fallback: upgrade controller if no other tasks
+    if (creep.room.controller && creep.room.controller.my) {
+      if (creep.upgradeController(creep.room.controller) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(creep.room.controller, { visualizePathStyle: { stroke: '#ffaa00' } });
+      }
+      return;
+    }
+
+    // Fallback: build construction sites
+    const constructionSite = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+    if (constructionSite) {
+      if (creep.build(constructionSite) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(constructionSite, { visualizePathStyle: { stroke: '#ffaa00' } });
+      }
+      return;
+    }
+
+    // Fallback: repair damaged structures
+    const damagedStructure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+      filter: s => s.hits < s.hitsMax && s.structureType !== STRUCTURE_WALL && s.structureType !== STRUCTURE_RAMPART
+    });
+    if (damagedStructure) {
+      if (creep.repair(damagedStructure) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(damagedStructure, { visualizePathStyle: { stroke: '#ffaa00' } });
+      }
+      return;
+    }
+
     if (creep.room.controller && creep.room.controller.my) {
       if (creep.upgradeController(creep.room.controller) === ERR_NOT_IN_RANGE) {
         creep.moveTo(creep.room.controller, { visualizePathStyle: { stroke: '#ffaa00' } });
@@ -62,5 +98,11 @@ function findDepositTarget(creep) {
 
   return creep.pos.findClosestByPath(FIND_STRUCTURES, {
     filter: structure => structure.store && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+  });
+}
+
+function findNeedyCreep(creep) {
+  return creep.pos.findClosestByPath(FIND_MY_CREEPS, {
+    filter: c => c !== creep && c.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && (c.memory.role === 'upgrader' || c.memory.role === 'builder' || c.memory.role === 'repairer')
   });
 }
