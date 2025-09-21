@@ -25,7 +25,7 @@ module.exports = [
   },
   {
     role: 'repairer',
-    desiredCount: 0,
+    desiredCount: 1,
     memory: { role: 'repairer' },
     template: [MOVE, WORK, CARRY]
   },
