@@ -1,6 +1,11 @@
-﻿const gather = require('utils_gather');
+const gather = require('utils_gather');
+
 module.exports = {
   run(creep, empire) {
+    if (creep.memory.bootstrap && (creep.room.storage || (creep.room.controller && creep.room.controller.level >= 3))) {
+      creep.memory.bootstrap = false;
+    }
+
     if (creep.memory.working && creep.store[RESOURCE_ENERGY] === 0) {
       creep.memory.working = false;
     }
@@ -8,7 +13,10 @@ module.exports = {
       creep.memory.working = true;
     }
     if (!creep.memory.working) {
-      gather.gatherEnergy(creep, ['storage', 'container', 'dropped', 'harvest']);
+      const priorities = creep.memory.bootstrap
+        ? ['harvest', 'dropped', 'container', 'storage']
+        : ['storage', 'container', 'dropped', 'harvest'];
+      gather.gatherEnergy(creep, priorities);
       return;
     }
     let targetStructure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
@@ -16,14 +24,14 @@ module.exports = {
     });
     if (targetStructure) {
       if (creep.transfer(targetStructure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(targetStructure);
+        creep.moveTo(targetStructure, { reusePath: 5 });
       }
       return;
     }
     targetStructure = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
     if (targetStructure) {
       if (creep.build(targetStructure) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(targetStructure);
+        creep.moveTo(targetStructure, { reusePath: 5 });
       }
       return;
     }
@@ -32,7 +40,7 @@ module.exports = {
     });
     if (targetStructure) {
       if (creep.repair(targetStructure) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(targetStructure);
+        creep.moveTo(targetStructure, { reusePath: 5 });
       }
       return;
     }
@@ -41,7 +49,7 @@ module.exports = {
     });
     if (targetStructure) {
       if (creep.transfer(targetStructure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(targetStructure);
+        creep.moveTo(targetStructure, { reusePath: 5 });
       }
       return;
     }
@@ -52,7 +60,7 @@ module.exports = {
     });
     if (targetStructure) {
       if (creep.transfer(targetStructure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(targetStructure);
+        creep.moveTo(targetStructure, { reusePath: 5 });
       }
       return;
     }
@@ -61,22 +69,22 @@ module.exports = {
     });
     if (targetStructure) {
       if (creep.transfer(targetStructure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(targetStructure);
+        creep.moveTo(targetStructure, { reusePath: 5 });
       }
       return;
     }
     if (creep.room.controller && creep.room.controller.my) {
       if (creep.upgradeController(creep.room.controller) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(creep.room.controller);
+        creep.moveTo(creep.room.controller, { reusePath: 10 });
       }
       return;
     }
     targetStructure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      filter: s => s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+      filter: s => s.store && s.store.getFreeCapacity && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
     });
     if (targetStructure) {
       if (creep.transfer(targetStructure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(targetStructure);
+        creep.moveTo(targetStructure, { reusePath: 5 });
       }
       return;
     }
