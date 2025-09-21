@@ -1,4 +1,4 @@
-const roles = {
+﻿const roles = {
   scout: require('roles_scout'),
   worker: require('roles_worker'),
   stationaryHarvester: require('roles_stationaryHarvester'),
@@ -10,11 +10,11 @@ const roles = {
 };
 
 module.exports = {
-  run(creep) {
+  run(creep, empire) {
     const role = creep.memory.role;
     const handler = roles[role];
     if (handler && typeof handler.run === 'function') {
-      handler.run(creep);
+      handler.run(creep, empire);
     } else {
       creep.say('noRole');
     }

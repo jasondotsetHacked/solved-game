@@ -1,5 +1,5 @@
-module.exports = {
-  run(creep) {
+﻿module.exports = {
+  run(creep, empire) {
     const sourceId = creep.memory.sourceId;
     if (!sourceId) {
       return;

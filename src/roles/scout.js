@@ -1,5 +1,5 @@
-module.exports = {
-  run(creep) {
+﻿module.exports = {
+  run(creep, empire) {
     const roomCallback = (roomName) => {
       const roomTag = Memory.rooms[roomName] && Memory.rooms[roomName].tag;
       if (roomTag === 'hostile') {

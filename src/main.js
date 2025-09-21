@@ -1,22 +1,28 @@
-const colony = require('managers_colony');
+﻿const colony = require('managers_colony');
+const empireManager = require('managers_empire');
 const memoryManager = require('managers_memory');
+const populationManager = require('managers_population');
 const mapVisuals = require('managers_mapVisuals');
-// const roomVisuals = require('managers_roomVisuals');
+const telemetry = require('managers_telemetry');
 const config = require('config');
 
 memoryManager.initMemory();
 
 module.exports.loop = function () {
   memoryManager.cleanCreepsMemory();
-  colony.run();
+
+  const empire = empireManager.refresh();
+  const spawnQueue = populationManager.buildSpawnQueue(empire);
+  const spawnStats = colony.run(empire, spawnQueue);
+
+  if (config.DEBUG === true) {
+    mapVisuals.run(empire);
+    telemetry.report(empire, spawnQueue, spawnStats);
+  } else {
+    telemetry.remember(empire, spawnQueue, spawnStats);
+  }
+
   if (Game.cpu.bucket === 10000) {
     // Game.cpu.generatePixel();
   }
-  if (config.DEBUG === true) {
-    // roomVisuals.run();
-    mapVisuals.run();
-    if (Game.time % 100 === 0) {
-      console.log(`CPU: ${Game.cpu.getUsed().toFixed(2)} / ${Game.cpu.limit} | Bucket: ${Game.cpu.bucket}`);
-    }
-  }
-}
+};

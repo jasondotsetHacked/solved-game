@@ -1,50 +1,29 @@
-module.exports = [
-  {
-    role: 'scout',
-    desiredCount: 0,
-    memory: { role: 'scout' },
-    template: [MOVE]
+﻿module.exports = {
+  worker: {
+    template: [WORK, CARRY, MOVE]
   },
-  {
-    role: 'worker',
-    desiredCount: 6,
-    memory: { role: 'worker' },
-    template: [MOVE, WORK, CARRY]
+  stationaryHarvester: {
+    template: [WORK, WORK, WORK, MOVE, CARRY],
+    minimumEnergy: 550
   },
-  {
-    role: 'stationaryHarvester',
-    desiredCount: 0,
-    memory: { role: 'stationaryHarvester' },
-    template: [MOVE, WORK, WORK, WORK, CARRY]
+  filler: {
+    template: [CARRY, CARRY, MOVE]
   },
-  {
-    role: 'filler',
-    desiredCount: 0,
-    memory: { role: 'filler' },
-    template: [MOVE, CARRY]
+  hauler: {
+    template: [CARRY, CARRY, MOVE],
+    minimumEnergy: 150
   },
-  {
-    role: 'repairer',
-    desiredCount: 1,
-    memory: { role: 'repairer' },
-    template: [MOVE, WORK, CARRY]
+  repairer: {
+    template: [WORK, CARRY, MOVE]
   },
-  {
-    role: 'hauler',
-    desiredCount: 0,
-    memory: { role: 'hauler' },
-    template: [MOVE, CARRY, CARRY]
+  upgrader: {
+    template: [WORK, WORK, MOVE, CARRY]
   },
-  {
-    role: 'upgrader',
-    desiredCount: 1,
-    memory: { role: 'upgrader' },
-    template: [MOVE, WORK, CARRY]
+  builder: {
+    template: [WORK, CARRY, CARRY, MOVE]
   },
-  {
-    role: 'builder',
-    desiredCount: 0,
-    memory: { role: 'builder' },
-    template: [MOVE, WORK, CARRY]
+  scout: {
+    template: [MOVE],
+    maximumEnergy: 50
   }
-];
+};

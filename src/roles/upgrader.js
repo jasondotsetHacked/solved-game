@@ -1,7 +1,7 @@
-const gather = require('utils_gather');
+﻿const gather = require('utils_gather');
 
 module.exports = {
-  run(creep) {
+  run(creep, empire) {
     if (creep.memory.working && creep.store[RESOURCE_ENERGY] === 0) {
       creep.memory.working = false;
     }

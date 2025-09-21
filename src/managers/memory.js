@@ -1,4 +1,4 @@
-module.exports = {
+﻿module.exports = {
     initMemory() {
         if (!Memory.creeps) {
             Memory.creeps = {};
