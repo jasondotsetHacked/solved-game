@@ -65,7 +65,7 @@ function buildRoomQueue(roomState, empire) {
 
   const sources = roomState.sources || [];
   for (const source of sources) {
-    if (!source.hasContainer || source.spots === 0) continue;
+    if (source.spots === 0) continue;
     if ((source.assignedHarvesters || 0) >= 1) continue;
     queue.push(createRoleRequest(roomState, 'stationaryHarvester', PRIORITY.harvester, {
       memory: { sourceId: source.id },
@@ -79,9 +79,8 @@ function buildRoomQueue(roomState, empire) {
     energyBudget: energyBudgetFor('worker', roomState)
   });
 
-  const containeredSources = sources.filter(source => source.hasContainer);
-  if (containeredSources.length > 0) {
-    const haulerTarget = calculateHaulerTarget(roomState, containeredSources);
+  if (sources.length > 0) {
+    const haulerTarget = calculateHaulerTarget(roomState, sources);
     ensureRole(queue, roomState, 'hauler', PRIORITY.hauler, haulerTarget, {
       energyBudget: energyBudgetFor('hauler', roomState)
     });
@@ -190,9 +189,9 @@ function calculateWorkerTarget(roomState) {
   return Math.min(target, 10);
 }
 
-function calculateHaulerTarget(roomState, containeredSources) {
-  if (!Array.isArray(containeredSources) || containeredSources.length === 0) return 0;
-  const totalHaulPartsNeeded = containeredSources.reduce((sum, source) => {
+function calculateHaulerTarget(roomState, sources) {
+  if (!Array.isArray(sources) || sources.length === 0) return 0;
+  const totalHaulPartsNeeded = sources.reduce((sum, source) => {
     const harvestRate = source.harvestRate || 10; // energy per tick for a standard source
     const roundTrip = Math.max(2, (source.haulRange || 10) * 2);
     const energyPerTrip = harvestRate * roundTrip;

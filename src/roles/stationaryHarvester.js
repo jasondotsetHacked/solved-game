@@ -14,16 +14,19 @@
       filter: structure => structure.structureType === STRUCTURE_CONTAINER
     })[0];
 
-    if (!container) {
-      return;
+    if (container) {
+      if (!creep.pos.isEqualTo(container.pos)) {
+        creep.moveTo(container, { visualizePathStyle: { stroke: '#ffaa00' } });
+        return;
+      }
+    } else {
+      // No container, harvest directly at source
+      if (!creep.pos.isNearTo(source)) {
+        creep.moveTo(source, { visualizePathStyle: { stroke: '#ffaa00' } });
+        return;
+      }
     }
 
-    if (!creep.pos.isEqualTo(container.pos)) {
-      creep.moveTo(container, { visualizePathStyle: { stroke: '#ffaa00' } });
-      return;
-    }
-    if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
-      creep.moveTo(source, { visualizePathStyle: { stroke: '#ffaa00' } });
-    }
+    creep.harvest(source);
   }
 };
