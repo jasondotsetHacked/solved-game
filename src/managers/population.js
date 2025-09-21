@@ -38,6 +38,14 @@ function buildRoomQueue(roomState, empire) {
   const totalAssigned = Object.values(counts).reduce((sum, count) => sum + count, 0);
   const energyCapacity = roomState.energyCapacity || roomState.energyAvailable || 300;
 
+  // Upgrader failsafe: always ensure at least one upgrader once we have 3+ creeps and controller owned
+  if ((counts.upgrader || 0) === 0 && (roomState.controllerLevel || 0) > 0 && totalAssigned >= 3) {
+    queue.push(createRoleRequest(roomState, 'upgrader', PRIORITY.upgrader, {
+      energyBudget: energyBudgetFor('upgrader', roomState),
+      minEnergy: energyMinimumFor('upgrader')
+    }));
+  }
+
   if (totalAssigned === 0) {
     const bootstrapBudget = Math.min(energyCapacity, energyBudgetFor('worker', roomState));
     queue.push(createRoleRequest(roomState, 'worker', PRIORITY.bootstrap, {
@@ -63,7 +71,9 @@ function buildRoomQueue(roomState, empire) {
   const sources = roomState.sources || [];
 
   // Sequential spawning for early game
-  if (totalAssigned === 1) {
+  if (totalAssigned >= 6) {
+    // Switch fully to dynamic logic
+  } else if (totalAssigned === 1) {
     // Spawn first stationary harvester
     if (sources.length > 0) {
       queue.push(createRoleRequest(roomState, 'stationaryHarvester', PRIORITY.harvester, {
@@ -213,6 +223,8 @@ function calculateWorkerTarget(roomState) {
 }
 
 function calculateHaulerTarget(roomState, sources) {
+  // TODO(work-cap): Introduce per-source WORK part accounting so we don't exceed 6 effective WORK per source.
+  // Planned approach: aggregate existing and queued harvester/worker WORK near each source, subtract from 6, spawn supplemental miners only if deficit remains.
   if (!Array.isArray(sources) || sources.length === 0) return 0;
   const totalHaulPartsNeeded = sources.reduce((sum, source) => {
     const harvestRate = source.harvestRate || 10; // energy per tick for a standard source
